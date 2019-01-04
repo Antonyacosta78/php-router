@@ -41,10 +41,8 @@ class Collector{
     }
 
     private function parseRoute($route){
-        //returns params as indexed Array(in order)
-        $route = rtrim($route, "/");
-        if($route === ""){
-            return [];
-        }
+
+    }
+   
 
 }
