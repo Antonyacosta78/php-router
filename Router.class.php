@@ -7,7 +7,7 @@ class Router{
     }
 
     public function resolve($route){
-        $this->collector->call($route);
+        $params = $this->collector->match($route);
     }
 
 }

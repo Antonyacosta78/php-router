@@ -33,7 +33,8 @@ class Collector{
         if(is_callable($closure)){
             $this->handlers[] = [
                 "method"=>$method,
-                "call"=>$closure
+                "call"=>$closure,
+                "match"=>$this->parseRoute($route)
             ];
             return true;
         }
@@ -41,7 +42,16 @@ class Collector{
     }
 
     private function parseRoute($route){
-
+        preg_match_all("/(\{.*?\})/",$route,$keys);
+        preg_match_all("/\{\w+:?(.*?)\}/",$route,$values);
+        $pattern = str_replace(
+                    $keys[1], 
+                    array_map(function($e){
+                        return ($e === "") ? "(.*)" : "(".trim($e).")";
+                    },$values[1]),
+                    $route
+                );
+        return "/".preg_replace("/\//","\/",$pattern)."/";
     }
    
 
