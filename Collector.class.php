@@ -3,6 +3,15 @@
 class Collector{
 
     public $handlers;
+    public $errorHandlers; 
+
+    public function error(int $error, $closure){
+        if(is_callable($closure)){
+            $this->errorHandlers[$error] = $closure;
+            return true;
+        }
+        return false;
+    }
 
     public function get(string $route, $function){
         $this->addRoute($route, "get", $function);
@@ -17,7 +26,14 @@ class Collector{
     }
 
     public function checkMethod(int $index, string $method){
-        return strtolower($method) === $this->handlers[$index]["method"];
+        $method = strtolower($method);
+        if($method !== "get" && $method !== "post"){//only get and post supported, sorry
+            return false;
+        }
+        if($this->handlers[$index]["method"] === "any"){
+            return true;
+        }
+        return $method === $this->handlers[$index]["method"];
     }
 
     public function call(int $index, array $args = []){
@@ -51,7 +67,7 @@ class Collector{
                     },$values[1]),
                     $route
                 );
-        return "/".preg_replace("/\//","\/",$pattern)."/";
+        return "/^".preg_replace("/\//","\/",$pattern)."$/";
     }
    
 
