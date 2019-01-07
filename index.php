@@ -19,6 +19,7 @@ $collector->error(405, function(){
 
 $collector->filter("testbefore", function(){
     echo "I'm executed before the route. ";
+    
 });
 
 $collector->filter("testafter", function(){
