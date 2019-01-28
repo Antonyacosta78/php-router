@@ -1,5 +1,5 @@
 <?php 
-//example file
+//test file
 
 echo "Hello World!".PHP_EOL;
 
@@ -28,7 +28,7 @@ $collector->get("/",function(){
     echo "It's Working";
 });
 
-$collector->any("/example", function(){
+$collector->post("/example", function(){
     echo " I am the example Route. ";
 }, ['before'=>"testbefore", 'after'=>"testafter"]);
 
@@ -36,6 +36,16 @@ $collector->get("/realroute/{id}/{sec}", function($id, $sec){
     echo "Params are working! got $id and $sec . ";
 });
 
+$collector->filter("restrictHOR", function(){
+    echo "lol nope"; return 1;
+});
+
+
+
 $router = new Router($collector, "/router");
 
-$router->resolve("/router/testClass/aSampleMethod/11213/41123");
+$router->resolve("/router/example");
+
+
+
+// $collector->restrict(["Class1", "class2/res", "class3/meth"], ["before"=>"auth", "after"=>"log"]);

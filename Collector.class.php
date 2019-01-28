@@ -5,7 +5,8 @@ class Collector{
     public $handlers;
     public $errorHandlers; 
     public $filters;
-    public $classRoute;
+    private $classRoute;
+    private $restrictedClasses = []; 
 
     public function __construct(){
         $this->classRoute = $this->parseRoute("/{classname: \w+}/{method: \w+}/{params: .*?}");
@@ -110,7 +111,8 @@ class Collector{
         return [$i, $matches];   
     }
 
-    private function matchOnClass($route){
+    private function matchOnClass($route)
+    {
         $route = explode("/",ltrim($route, "/")); //quebra em um array usando "/" como separador, se tem uma barra no começo, remove primeiro
         $classname = array_shift($route);
         $method = array_shift($route);
@@ -129,16 +131,51 @@ class Collector{
         return true;
     }
 
+    public function restrict(array $paths, array $filters)
+    {
+        try{
+            extract($filters);
+            if( isset($before) && !isset($this->filters[$before]) ){
+                throw new Exception("Invalid parameter, filter {$before} does not exist");
+            }
+            if( isset($after) && !isset($this->filters[$after]) ){
+                throw new Exception("Invalid parameter, filter {$after} does not exist");
+            }
+
+            $this->restrictedClasses = array_merge($this->restrictedClasses, array_fill_keys($paths, $filters));
+        }catch(Exception $e){ 
+            echo "Caught Exception [".$e->getMessage()."] while executing restrict, (classes to restrict: ";
+            var_dump($paths);
+            echo ") please fix this to continue"; 
+            die();
+        }
+    }
+
     public function call($index, array $args = [])
     {
-        
+        $return = null;        
         if($index == "classRoute"){
             list($classname, $method, $params) = $args;
             $class = new $classname();
             
-            $class->$method(...$params);
+            if(isset($this->restrictedClasses[$classname])){
+               extract($this->restrictedClasses[$classname]);
+
+            }elseif(isset($this->restrictedClasses["$classname/$method"])){
+                extract($this->restrictedClasses["$classname/$method"]);
+            }
+            //extract() takes indexes for naming new variables with the corresponding value
+
+            if(isset($before)){
+                $return = $this->filters[$before]();
+            }
+            if(is_null($return)){
+                $class->$method(...$params);
+                if(isset($after)){
+                    $this->filters[$after]();
+                }
+            }
         }else{
-            $return = null;
             if($this->handlers[$index]["before"] !== null){
                 $return = $this->filters[$this->handlers[$index]["before"]]();
             }
@@ -153,6 +190,7 @@ class Collector{
                 }    
             }
         }
+    //----
     }
 
     private function addRoute($route, $method, $closure, $filters)
