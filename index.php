@@ -1,25 +1,23 @@
 <?php 
 //example file
-error_reporting(E_ALL);
+
 echo "Hello World!".PHP_EOL;
 
 include_once "Collector.class.php";
-
 include_once "Router.class.php";
+include_once "Controller.php";
 
-$collector = new Collector;
+$collector = new Collector();
 
 $collector->error(404, function(){
     echo "sorry pal, no matches";
 });
-
 $collector->error(405, function(){
     echo "hey, you should not be using ".$_SERVER["REQUEST_METHOD"];
 });
 
 $collector->filter("testbefore", function(){
     echo "I'm executed before the route. ";
-    
 });
 
 $collector->filter("testafter", function(){
@@ -40,4 +38,4 @@ $collector->get("/realroute/{id}/{sec}", function($id, $sec){
 
 $router = new Router($collector, "/router");
 
-$router->resolve("/router/example");
+$router->resolve("/router/testClass/aSampleMethod/11213/41123");
