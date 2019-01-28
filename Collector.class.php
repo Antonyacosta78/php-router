@@ -18,20 +18,22 @@ class Collector{
         if(is_callable($closure)){
             $this->filters[$name] = $closure;
             return true;
+        }else{
+            throw new Exception("Invalid parameter, expected a callable, ".gettype($closure)." given");
         }
         return false;
     }
 
-    public function get(string $route, $function, $filters = ["before"=>null, "after"=>null]){
-        $this->addRoute($route, "get", $function, $filters);
+    public function get(string $route, $function, $filters = []){
+        return $this->addRoute($route, "get", $function, $filters);
     }
 
-    public function post(string $route, $function, $filters = ["before"=>null, "after"=>null]){
-        $this->addRoute($route, "post", $function, $filters);
+    public function post(string $route, $function, $filters = []){
+        return $this->addRoute($route, "post", $function, $filters);
     }
 
-    public function any(string $route, $function, $filters = ["before"=>null, "after"=>null]){
-       $this->addRoute($route, "any", $function, $filters);
+    public function any(string $route, $function, $filters = []){
+       return $this->addRoute($route, "any", $function, $filters);
     }
 
     public function checkMethod(int $index, string $method){
@@ -46,7 +48,7 @@ class Collector{
     }
 
     public function call(int $index, array $args = []){
-        if($this->handlers[$index]["before"] !== null && is_callable($this->filters[$this->handlers[$index]["before"]])){
+        if($this->handlers[$index]["before"] !== null){
             $return = $this->filters[$this->handlers[$index]["before"]]();
         }
         if(is_null($return)){   
@@ -55,24 +57,38 @@ class Collector{
             }else{
                 $this->handlers[$index]["call"](...$args);
             }
-            if($this->handlers[$index]["after"] !== null && is_callable($this->filters[$this->handlers[$index]["after"]])){
+            if($this->handlers[$index]["after"] !== null){
                 $this->filters[$this->handlers[$index]["after"]]();
             }    
         }
     }
 
     private function addRoute($route, $method, $closure, $filters){
-        if(is_callable($closure)){
+        try{
+            if( !is_callable($closure) ){
+                throw new Exception("Invalid parameter, expected callable function, ".gettype($closure)." given");
+                return false;
+            }
+            if( !isset($filter["before"]) && !isset($this->filters[$filter['before']]) ){
+                throw new Exception("Invalid parameter: filter {$filter['before']} does not exist");
+                return false;
+            }
+            if( !isset($filter["after"]) && !isset($this->filters[$filter['after']]) ){
+                throw new Exception("Invalid parameter: filter {$filter['after']} does not exist");
+                return false;
+            }
             $this->handlers[] = [
-                "method"=>$method,
-                "call"=>$closure,
-                "match"=>$this->parseRoute($route),
-                "before"=>$filters["before"],
-                "after"=>$filters["after"]
-            ];
-            return true;
+                    "method"=>$method,
+                    "call"=>$closure,
+                    "match"=>$this->parseRoute($route),
+                    "before"=>$filters["before"],
+                    "after"=>$filters["after"]
+                ];
+                return true;
+        }catch(Exception $e){
+            echo "Caught Exception [".$e->getMessage()."] while defining route {$route} please fix this to continue"; 
+            die();
         }
-        return false;
     }
 
     private function parseRoute($route){
