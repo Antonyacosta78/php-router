@@ -2,14 +2,14 @@
 
 class Collector{
 
-    public $handlers;
+    public $handlers = [];
     public $errorHandlers; 
     public $filters;
     private $classRoute;
     private $restrictedClasses = []; 
 
     public function __construct(){
-        $this->classRoute = $this->parseRoute("/{classname: \w+}/{method: \w+}/{params: .*?}");
+        $this->classRoute = $this->parseRoute("/{classname: \w+}/{method: \w+}/?{params: .*?}");
     }
 
     public function error(int $error, $closure)
@@ -80,14 +80,14 @@ class Collector{
         $matches = [];
         $match = 0;
         $i = 0;
-        do{
+        while($match === 0 && $i < count($this->handlers)){
         $match = preg_match(
                 $this->handlers[$i]["match"],
                 $route,
                 $matches
             );
         $i++;
-        }while($match === 0 && $i < count($this->handlers));
+        }
 
         if($match !== 0){//if match sucessful
             array_shift($matches);
@@ -105,9 +105,9 @@ class Collector{
             $matches
         );
         $i = "classRoute";
-    
+        
         array_shift($matches);
-        $matches[2] = explode("/", $matches[2]);
+        $matches[2] = isset($matches[2]) ? explode("/", $matches[2]) : null;
         return [$i, $matches];   
     }
 
@@ -187,7 +187,8 @@ class Collector{
                 }
                 if($this->handlers[$index]["after"] !== null){
                     $this->filters[$this->handlers[$index]["after"]]();
-                }    
+                }
+                return $this->handlers[$index]["load"];
             }
         }
     //----
