@@ -5,7 +5,6 @@ echo "Hello World!".PHP_EOL;
 
 include_once "Collector.class.php";
 include_once "Router.class.php";
-include_once "Controller.php";
 
 $collector = new Collector();
 
@@ -28,9 +27,9 @@ $collector->get("/",function(){
     echo "It's Working";
 });
 
-$collector->post("/example", function(){
+$collector->get("/example", function(){
     echo " I am the example Route. ";
-}, ['before'=>"testbefore", 'after'=>"testafter"]);
+}, ["filters"=>['before'=>"testbefore", 'after'=>"testafter"]]);
 
 $collector->get("/realroute/{id}/{sec}", function($id, $sec){
     echo "Params are working! got $id and $sec . ";

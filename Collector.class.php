@@ -47,19 +47,19 @@ class Collector{
             
     }
 
-    public function get(string $route, $function, $filters = [])
+    public function get(string $route, $function, $options = [])
     {
-        return $this->addRoute($route, "get", $function, $filters);
+        return $this->addRoute($route, "get", $function, $options);
     }
 
-    public function post(string $route, $function, $filters = [])
+    public function post(string $route, $function, $options = [])
     {
-        return $this->addRoute($route, "post", $function, $filters);
+        return $this->addRoute($route, "post", $function, $options);
     }
 
-    public function any(string $route, $function, $filters = [])
+    public function any(string $route, $function, $options = [])
     {
-       return $this->addRoute($route, "any", $function, $filters);
+       return $this->addRoute($route, "any", $function, $options);
     }
 
     public function checkMethod($index, string $method)
@@ -193,13 +193,14 @@ class Collector{
     //----
     }
 
-    private function addRoute($route, $method, $closure, $filters)
+    private function addRoute($route, $method, $closure, $options)
     {
         try{
             if( !is_callable($closure) ){
                 throw new Exception("Invalid parameter, expected callable function, ".gettype($closure)." given");
                 return false;
             }
+            extract($options);
             if( isset($filters["before"]) && !isset($this->filters[$filters['before']]) ){
                 throw new Exception("Invalid parameter: filter ".$filters['before']." (defined as filter before) does not exist");
                 return false;
@@ -213,7 +214,8 @@ class Collector{
                     "call"=>$closure,
                     "match"=>$this->parseRoute($route),
                     "before"=>isset($filters["before"]) ? $filters["before"] : NULL,
-                    "after"=>isset($filters["after"]) ? $filters["after"] : NULL
+                    "after"=>isset($filters["after"]) ? $filters["after"] : NULL,
+                    "load"=>isset($struct) ? $struct : NULL
                 ];
                 return true;
         }catch(Exception $e){
